@@ -100,7 +100,7 @@ python Hangman.py
 Finally, open your web browser and navigate to http://127.0.0.1:5000 to start playing!
 
 
-## HOW TO PLAY: 
+## 🎯 HOW TO PLAY: 
 
 * Choose a Category: Select a previously saved category from the right panel on the main menu, or use the AI generator on the left to create a brand new, highly specific category.
 * Make Guesses: Click the on-screen keyboard to guess letters.
