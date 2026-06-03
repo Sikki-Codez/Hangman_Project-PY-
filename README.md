@@ -1,108 +1,131 @@
 # AI-Powered Hangman Game 🎮🧠
 
-A modernized, web-based adaptation of the classic Hangman game. This project elevates the traditional game by integrating the **Google Gemini API** to dynamically generate custom word categories on the fly, storing them locally via **PostgreSQL** for future replayability without consuming additional API quota.
+A modernized, web-based adaptation of the classic Hangman game. This project elevates the traditional game by integrating the **Google Gemini API** to dynamically generate custom word categories on the fly, storing them locally for replayability without consuming additional API quota.
 
-Designed with a custom "dark graph-paper" notebook aesthetic, it features full session management, dynamic UI updates, and integrated sound effects, showcasing a complete full-stack integration.
+Designed with a custom "dark graph-paper" notebook aesthetic, it features modular backend components, full user authentication, dynamic UI elements, and integrated sound feedback.
+
+---
 
 ## ✨ Features
-* **AI Category Generation:** Type any topic (e.g., "Space Exploration" or "Types of Pasta") and the Gemini 2.5 Flash model will instantly generate a curated list of words matching your specific length constraints.
-* **Persistent Local Database:** All AI-generated categories are cleaned, validated, and saved to a local PostgreSQL database.
-* **Smart UI/UX:** * Custom dark mode notebook aesthetic with a CSS grid background.
-  * Interactive on-screen keyboard that visually disables guessed letters.
-  * Dynamic, high-contrast Hangman graphics that invert cleanly on dark backgrounds.
-  * Loading spinners for asynchronous AI background tasks.
-* **Audio Feedback:** Integrated sound effects for correct guesses, wrong guesses, victories, and game overs.
-* **Automated CI/CD:** Includes a GitHub Actions pipeline (`ci.yml`) to automatically verify Python syntax and compilation on every push.
+
+*   **AI Category Generation:** Input any topic (e.g., *Space Exploration*, *Mythological Creatures*, or *Types of Pasta*). The Gemini API generates a tailored, clean list of matching words on the fly.
+*   **Asynchronous Background Tasks:** Category generation runs in a non-blocking background thread (`threading.Thread`) while the client-side JavaScript polls status checks every 1.5 seconds, showing a modern loading spinner without locking up the server.
+*   **User Portal & Authentication:**
+    *   Secure User Login and Account Creation (Register) powered by `werkzeug.security` cryptographic hashing.
+    *   Session tracking (`session['user_id']`) preserved across game rounds.
+    *   Tracks user stats: **Highest Streak**, **Total Wins**, and **Total Games Played**.
+*   **Adjustable Difficulty Tiers:**
+    *   🟢 **Easy:** 10 allowed mistakes, shorter words (4–7 characters).
+    *   🟡 **Medium:** 8 allowed mistakes, medium words (8–10 characters).
+    *   🔴 **Hard:** 6 allowed mistakes, long words (11–20 characters).
+*   **AI-Powered Gameplay Hints:** Stuck on a word? Ask the AI for a semantic hint at the cost of **3 mistakes** (requires at least 4 remaining lives to use).
+*   **Persistent SQLite / PostgreSQL Integration:** Words are stored locally using SQLAlchemy to limit API calls.
+*   **Optimized Selection Queries:** Word selection uses an optimized $O(1)$ count-offset selection query instead of slow random sorting (`Db.func.random()`).
+*   **Responsive Dark UI:** Interactive on-screen keyboard, inverted high-contrast Hangman status SVGs, and a styled dark selection dropdown to match the dark graph-paper aesthetic.
+*   **Audio Engine:** Implements micro-interactions through dynamic sound effects for correct/wrong guesses, victories, and defeats.
+
+---
 
 ## 🛠️ Tech Stack
-* **Backend:** Python, Flask, Flask-Session
-* **Database:** PostgreSQL (pgAdmin 4), SQLAlchemy, pg8000
-* **AI Integration:** Google GenAI SDK (`gemini-2.5-flash`)
-* **Frontend:** HTML5, Bootstrap 5, Custom CSS, Jinja2 Templating
 
-## 📂 Repository Structure
+*   **Backend:** Python, Flask, Flask-SQLAlchemy, python-dotenv
+*   **Database:** PostgreSQL (with `pg8000` driver) or SQLite (SQLAlchemy fallback)
+*   **AI Service:** Google Gemini API (`google-genai` SDK)
+*   **Frontend:** HTML5, Bootstrap 5, Custom Vanilla CSS, Jinja2 Templating
+*   **Automated Testing:** GitHub Actions CI pipeline (`ci.yml`) for automated syntax compilation tests.
+
+---
+
+## 📂 File Structure
+
 ```text
-├── .github/workflows/
-│   └── ci.yml            # GitHub Actions automated testing pipeline
-├── static/               
-│   ├── images/           # hangman0.png through hangman10.png
-│   └── sounds/           # correct.mp3, wrong.mp3, win.mp3, lose.mp3
-├── templates/            
-│   └── index.html        # Main Jinja/HTML application layout
-├── .gitignore            # Ignores local environments and secret API keys
-├── Hangman.py            # Core Flask application, DB schema, and API logic
-└── requirements.txt      # Python dependencies and package versions
-
+Hangman_PY/
+├── .github/
+│   └── workflows/
+│       └── ci.yml            # CI pipeline verifying Python compilation
+├── static/
+│   ├── images/               # Hangman status images (hangman0.png to hangman10.png)
+│   └── sounds/               # Sound assets (correct.mp3, wrong.mp3, win.mp3, lose.mp3)
+├── templates/
+│   └── index.html            # Core frontend UI template (Bootstrap 5 + Custom CSS)
+├── .env                      # Environment configurations (API key & secrets - git-ignored)
+├── .gitignore                # Git ignore rules
+├── Hangman.py                # Main entry point and Flask app initializations
+├── ai_services.py            # Gemini API client wrapper & Pydantic structured output models
+├── models.py                 # SQLAlchemy Database models (User & Word schemas)
+├── routes.py                 # Blueprint routes, gameplay logic, and authentication endpoints
+├── requirements.txt          # Python library dependencies
+└── README.md                 # Project documentation
 ```
 
-# 🚀 How to Run This Project Locally
+---
 
-Follow these steps to set up the development environment and play the game on your own machine.
+## 🚀 How to Run the Project Locally
 
-## Prerequisites
+Follow these steps to configure, set up, and play the game on your local machine.
 
-Before you begin, ensure you have the following installed:
-* Python 3.10 or higher
-* PostgreSQL (and pgAdmin 4 for easy local database management)
-* A free Google Gemini API Key (You can claim one at Google AI Studio)
+### Prerequisites
 
-## Step 1: Clone the Repository
+*   Python `3.10` or higher installed.
+*   PostgreSQL installed (or use SQLite by configuring the database URL).
+*   A free Google Gemini API Key from [Google AI Studio](https://aistudio.google.com).
 
-Open your terminal or command prompt and download the code:
+### Step 1: Clone the Repository
 
 ```bash
-git clone [https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME.git](https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME.git)
-cd YOUR_REPOSITORY_NAME
+git clone https://github.com/Sikki-Codez/Hangman_Project-PY-.git
+cd Hangman_Project-PY-
 ```
 
-## Step 2: Set Up the Database
+### Step 2: Configure the Environment (`.env`)
 
-This application requires a local database to save the AI-generated categories.
-
-1. Open pgAdmin 4 (or your preferred PostgreSQL client).
-2. Create a brand new, empty database and name it exactly: `Hangman`
-
-> **Note:** You do not need to manually create any tables. SQLAlchemy will automatically build the necessary data tables the first time you run the application.
-
-## Step 3: Configure Environment Variables
-
-Because API keys are private, they are intentionally excluded from this repository. You must create your own configuration file.
-
-1. In the root folder of the project (right next to `Hangman.py`), create a new file named exactly `.env` (do not forget the leading dot).
-2. Open `.env` in any text editor and add your Gemini API key and your local database credentials:
+1. Create a file named `.env` in the root directory of the project.
+2. Open the file in a text editor and add the following configuration:
 
 ```env
-GEMINI_API_KEY=your_actual_api_key_here
-DATABASE_URL=postgresql+pg8000://postgres:YOUR_PGADMIN_PASSWORD@localhost:5432/Hangman
+# Google Gemini API key
+GEMINI_API_KEY=your_actual_gemini_api_key_here
+
+# Flask session security secret key
+FLASK_SECRET_KEY=generate_some_secure_random_string_here
+
+# Database URI Connection String
+# PostgreSQL example:
+DATABASE_URL=postgresql+pg8000://postgres:YOUR_PASSWORD@localhost:5432/Hangman
+# SQLite example (uncomment to use):
+# DATABASE_URL=sqlite:///hangman.db
 ```
 
-## Step 4: Install Dependencies
+*Note: If you use PostgreSQL, make sure to open pgAdmin 4 or your client and create a database named exactly `Hangman` first. SQLAlchemy will automatically create the tables inside it when you start the server.*
 
-It is highly recommended to use a virtual environment to avoid package conflicts. Run the following commands in your terminal:
+### Step 3: Install Dependencies
 
+Set up a Python virtual environment to manage dependencies securely:
 
-**For Windows:**
+**Windows:**
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Step 5: Launch the Game
+### Step 4: Run the Application
 
-With the database ready and packages installed, start the local Flask development server:
+Start the Flask development server:
 
-**For Windows:**
 ```bash
 python Hangman.py
 ```
 
-Finally, open your web browser and navigate to http://127.0.0.1:5000 to start playing!
+Open your browser and navigate to: **`http://127.0.0.1:5000`**
 
+---
 
-## 🎯 HOW TO PLAY: 
+## 🎯 How to Play
 
-* Choose a Category: Select a previously saved category from the right panel on the main menu, or use the AI generator on the left to create a brand new, highly specific category.
-* Make Guesses: Click the on-screen keyboard to guess letters.
-* Survive: You are allowed up to 10 total mistakes before the Hangman is fully drawn and the game ends.
-* Manage Data: Click the 🗑️ icon next to any saved category on the main menu to permanently delete those words from your local database.
+1.  **Register / Log In:** Click the **Login / Register** button in the navbar to save your streaks, games played, and wins to the database.
+2.  **Generate a Category:** Use the left panel to request a new AI category (e.g., *Cryptocurrency*, *Famous Scientists*). The generator automatically builds 100 relevant words matching your difficulty constraints.
+3.  **Play Saved Categories:** Pick any category from the list in the right panel. Adjust the difficulty selector dropdown first to scale mistake limits.
+4.  **Guess Letters:** Click the interactive on-screen keyboard buttons or use the keyboard to guess characters in the word.
+5.  **Get AI Hints:** Click **Get AI Hint** to get a context clue. Using a hint costs **3 mistakes** and can only be used if you have at least 4 remaining mistakes to spare.
+6.  **Manage Saved Data:** Clean up your database list by clicking the trash bin icon (`🗑️`) next to any saved category.
